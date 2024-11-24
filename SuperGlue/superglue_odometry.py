@@ -40,7 +40,6 @@ class SuperGlueOdometry():
    def visual_odometry(self, subset: int = None):
       if subset is None:
          num_frames = self.dataset_handler.num_frames
-
       else:
          num_frames = subset
 
@@ -90,6 +89,7 @@ class SuperGlueOdometry():
       plot_path_with_matrix_and_angle(self.sequence_name, self.dataset_handler.ground_truth[:subset, :, :], trajectory, error_angle)
 
 if __name__ == "__main__":
+
    vo = SuperGlueOdometry("02")
    vo.visual_odometry(subset=1000)
    # first_image = vo.dataset_handler.first_image_left

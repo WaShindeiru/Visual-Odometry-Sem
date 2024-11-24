@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  ros1:
+    build:
+      context: ./
+      dockerfile: ros1.Dockerfile
+    tty: true
+    stdin_open: true
+
+    volumes:
+      - /media/washindeiru/041E9B291E9B1332/visual_odometry_data/mgd2r:/odom_files
+
+    ports:
+      - "11311:11311"
+
+  ros2:
+    build:
+      context: ./
+      dockerfile: ros2.Dockerfile
+    tty: true
+    stdin_open: true
+
+  bridge:
+    image: ros:foxy-ros1-bridge
+    environment:
+      - "ROS_HOSTNAME=bridge"
+      - "ROS_MASTER_URI=http://ros1:11311"
+    command: /bin/bash -c "sleep 2 && ros2 run ros1_bridge dynamic_bridge"
+#    entrypoint: "sleep 2 && ros2 run ros1_bridge dynamic_bridge"
+#    command:
+#      - sleep 2
+#      - ros2 run ros1_bridge dynamic_bridge
+    ports:
+      - "9090:9090"
+    depends_on:
+      - ros1
+
+#volumes:
+#  /media/washindeiru/041E9B291E9B1332/visual_odometry_data/mgd2r:

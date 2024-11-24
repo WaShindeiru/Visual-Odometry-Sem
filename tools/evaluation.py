@@ -1,5 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+
+from Tartanvo.Datasets.transformation import SE2pos_quat
 
 
 def form_transf(R, t):
@@ -29,7 +32,8 @@ def plot_path(sequence_name, ground_truth_path, predicted_path):
 
    ax1.plot(ground_truth_path[:, 0], ground_truth_path[:, 1], label="ground truth")
    ax1.plot(predicted_path[:, 0], predicted_path[:, 1], label="prediction")
-   # ax1.set_xlim((-10, 10))
+   ## to delete
+   # ax1.set_xlim((-150, 50))
    ax1.set_xlabel("X")
    ax1.set_ylabel("Y")
    ax1.set_title("Trajectory")
@@ -42,6 +46,11 @@ def plot_path(sequence_name, ground_truth_path, predicted_path):
 
    ax1.legend()
    # ax2.legend()
+
+   try:
+      os.mkdir(f"./results/{sequence_name}")
+   except FileExistsError:
+      pass
 
    fig.savefig(f"./results/{sequence_name}/results.png")
 
@@ -59,6 +68,7 @@ def make_matrix_homogenous(matrix):
 def plot_path_with_matrix(sequence_name, ground_truth_path_matrix, predicted_path_matrix):
    ground_truth_path = ground_truth_path_matrix[:, [0, 1], [3, 3]]
    predicted_path = predicted_path_matrix[:, [0, 1], [3, 3]]
+   np.savetxt(f"./results/{sequence_name}/results.txt", predicted_path_matrix.reshape(-1, 12), delimiter=' ')
    plot_path(sequence_name, ground_truth_path, predicted_path)
 
 
@@ -88,3 +98,27 @@ def plot_path_with_matrix_and_angle(sequence_name, ground_truth_path_matrix, pre
 
    fig.savefig(f"./results/{sequence_name}/results_angle.png")
    fig.show()
+
+
+def save_as_quat(sequence_name, predicted_path_matrix):
+   quat_matrix = np.zeros((predicted_path_matrix.shape[0], 7), dtype=np.float64)
+   for i in range(0, predicted_path_matrix.shape[0]):
+      quat_matrix[i, :] = SE2pos_quat(predicted_path_matrix[i, :, :])
+
+   np.savetxt(f"./results/{sequence_name}/results_quat.txt", quat_matrix, delimiter=' ')
+
+
+def save_as_s3(sequence_name, predicted_path_matrix):
+   np.savetxt(f"./results/{sequence_name}/results_s3.txt", predicted_path_matrix.reshape(-1, 12), delimiter=' ')
+
+
+def save_3d_plot(sequence_name, predicted_path_matrix):
+   predicted_path_matrix = predicted_path_matrix.reshape(-1, 12)
+   fig = plt.figure(figsize = (7, 6))
+   ax = fig.add_subplot(111, projection='3d')
+   ax.plot(predicted_path_matrix[:, 3], predicted_path_matrix[:, 7], predicted_path_matrix[:, 11])
+   ax.set_xlabel('x (m)')
+   ax.set_ylabel('y (m)')
+   ax.set_zlabel('z (m)')
+
+   fig.savefig(f"./results/{sequence_name}/results_3d.png")

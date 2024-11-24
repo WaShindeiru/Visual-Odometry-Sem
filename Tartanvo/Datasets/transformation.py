@@ -49,6 +49,16 @@ def se2SE(se_data):
     result_mat[0:3,3]   = np.matrix(se_data[0:3]).T
     return result_mat
 ### can get wrong result
+
+
+def se2SE_better(se_data):
+    result_mat = np.eye(4)
+    result_mat[0:3, 0:3] = so2SO(se_data[0, 3:6])
+    result_mat[0:3, 3] = se_data[0, 0:3].T
+    return result_mat
+### can get wrong result
+
+
 def se_mean(se_datas):
     all_SE = np.matrix(np.eye(4))
     for i in range(se_datas.shape[0]):
