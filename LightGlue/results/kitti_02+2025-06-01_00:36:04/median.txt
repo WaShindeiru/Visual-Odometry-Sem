@@ -1,0 +1,4 @@
+#rotation error mean, translation error mean
+0.11902201811799479, 1.6323795208936613
+#rotation error median, translation error median
+0.11092312081911873, 1.3168058630222963
