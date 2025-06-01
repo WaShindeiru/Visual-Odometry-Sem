@@ -137,6 +137,18 @@ def pos_quat2SE(quat_data):
     return SE
 
 
+def pos_quats2SEs2(quat_datas):
+    data_len = quat_datas.shape[0]
+    SEs = np.zeros((data_len, 4, 4))
+    for i_data in range(0, data_len):
+        SO = R.from_quat(quat_datas[i_data, 3:7]).as_matrix()
+        SE = np.eye(4)
+        SE[0:3, 0:3] = SO
+        SE[0:3, 3] = quat_datas[i_data, 0:3]
+        SEs[i_data, :, :] = SE
+    return SEs
+
+
 def pos_quats2SEs(quat_datas):
     data_len = quat_datas.shape[0]
     SEs = np.zeros((data_len,12))
@@ -162,3 +174,12 @@ def SE2pos_quat(SE_data):
     pos_quat[3:] = SO2quat(SE_data[0:3,0:3])
     pos_quat[:3] = SE_data[0:3,3].T
     return pos_quat
+
+
+def SEs2pos_quats(SE_datas):
+    data_len = SE_datas.shape[0]
+    pos_quats = np.zeros((data_len,7))
+    for i_data in range(0,data_len):
+        pos_quat = SE2pos_quat(SE_datas[i_data,:])
+        pos_quats[i_data,:] = pos_quat
+    return pos_quats
