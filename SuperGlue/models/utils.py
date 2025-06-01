@@ -51,7 +51,7 @@ import cv2
 import torch
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 
 
 class AverageTimer:
@@ -100,7 +100,7 @@ class VideoStreamer:
     """ Class to help process image streams. Four types of possible inputs:"
         1.) USB Webcam.
         2.) An IP camera
-        3.) A directory of images (files in directory matching 'image_glob').
+        3.) A directory of images (files_ in directory matching 'image_glob').
         4.) A video file, such as an .mp4 or .avi file.
     """
     def __init__(self, basedir, resize, skip, image_glob, max_length=1000000):
@@ -282,30 +282,6 @@ def read_image(path, device, resize, rotation, resize_float):
     return image, inp, scales
 
 
-def transform_image(image, device, resize=None, resize_float=None, rotation=0):
-    if resize is None:
-        resize = image.shape[1], image.shape[0]
-
-    if image is None:
-        return None, None, None
-    w, h = image.shape[1], image.shape[0]
-    w_new, h_new = process_resize(w, h, resize)
-    scales = (float(w) / float(w_new), float(h) / float(h_new))
-
-    if resize_float:
-        image = cv2.resize(image.astype('float32'), (w_new, h_new))
-    else:
-        image = cv2.resize(image, (w_new, h_new)).astype('float32')
-
-    if rotation != 0:
-        image = np.rot90(image, k=rotation)
-        if rotation % 2:
-            scales = scales[::-1]
-
-    inp = frame2tensor(image, device)
-    return image, inp, scales
-
-
 # --- GEOMETRY ---
 
 
@@ -316,11 +292,11 @@ def estimate_pose(kpts0, kpts1, K0, K1, thresh, conf=0.99999):
     f_mean = np.mean([K0[0, 0], K1[1, 1], K0[0, 0], K1[1, 1]])
     norm_thresh = thresh / f_mean
 
-    kpts0 = (kpts0 - K0[[0, 1], [2, 2]][None]) / K0[[0, 1], [0, 1]][None]
-    kpts1 = (kpts1 - K1[[0, 1], [2, 2]][None]) / K1[[0, 1], [0, 1]][None]
+    kpts0_ = (kpts0 - K0[[0, 1], [2, 2]][None]) / K0[[0, 1], [0, 1]][None]
+    kpts1_ = (kpts1 - K1[[0, 1], [2, 2]][None]) / K1[[0, 1], [0, 1]][None]
 
     E, mask = cv2.findEssentialMat(
-        kpts0, kpts1, np.eye(3), threshold=norm_thresh, prob=conf,
+        kpts0_, kpts1_, np.eye(3), threshold=norm_thresh, prob=conf,
         method=cv2.RANSAC)
 
     assert E is not None
@@ -329,11 +305,26 @@ def estimate_pose(kpts0, kpts1, K0, K1, thresh, conf=0.99999):
     ret = None
     for _E in np.split(E, len(E) / 3):
         n, R, t, _ = cv2.recoverPose(
-            _E, kpts0, kpts1, np.eye(3), 1e9, mask=mask)
+            _E, kpts0_, kpts1_, np.eye(3), 1e9, mask=mask)
         if n > best_num_inliers:
             best_num_inliers = n
             ret = (R, t[:, 0], mask.ravel() > 0)
+
     return ret
+
+    # if ret is not None:
+    #     return ret
+    #
+    # else:
+    #     E, mask = cv2.findEssentialMat(
+    #         kpts0, kpts1, K0, threshold=norm_thresh, prob=conf,
+    #         method=cv2.RANSAC)
+    #
+    #     n, R, t, _ = cv2.recoverPose(
+    #         E, kpts0, kpts1, K0, 1e9, mask=mask)
+    #
+    #     ret = (R, t[:, 0], mask.ravel() > 0)
+    #     return ret
 
 
 def rotate_intrinsics(K, image_shape, rot):
@@ -406,7 +397,15 @@ def angle_error_mat(R1, R2):
 
 def angle_error_vec(v1, v2):
     n = np.linalg.norm(v1) * np.linalg.norm(v2)
-    return np.rad2deg(np.arccos(np.clip(np.dot(v1, v2) / n, -1.0, 1.0)))
+    return np.rad2deg(np.arccos(np.clip(np.dot(v1, v2) / np.max([n, np.finfo(np.float64).eps]), -1.0, 1.0)))
+
+def compute_pose_error_mine(R_gt, t_gt, R, t):
+    # R_gt = T_0to1[:3, :3]
+    # t_gt = T_0to1[:3, 3]
+    error_t = angle_error_vec(t, t_gt)
+    error_t = np.minimum(error_t, 180 - error_t)  # ambiguity of E estimation
+    error_R = angle_error_mat(R, R_gt)
+    return error_t, error_R
 
 
 def compute_pose_error(T_0to1, R, t):
@@ -479,10 +478,9 @@ def make_matching_plot(image0, image1, kpts0, kpts1, mkpts0, mkpts1,
                        opencv_title='matches', small_text=[]):
 
     if fast_viz:
-        make_matching_plot_fast(image0, image1, kpts0, kpts1, mkpts0, mkpts1,
+        return make_matching_plot_fast(image0, image1, kpts0, kpts1, mkpts0, mkpts1,
                                 color, text, path, show_keypoints, 10,
                                 opencv_display, opencv_title, small_text)
-        return
 
     plot_image_pair([image0, image1])
     if show_keypoints:
