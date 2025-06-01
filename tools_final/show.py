@@ -155,27 +155,80 @@ def plot_s3_timestamp_estimated_groundtruth_one_ax(
         save=False,
         figure_path = None
     ):
-    df = pd.read_csv(estimated_path, sep=" ", header=None, comment="#")
-    prediction = df.to_numpy()
+    # df = pd.read_csv(estimated_path, sep=" ", header=None, comment="#")
+    # prediction = df.to_numpy()
+    #
+    # df = pd.read_csv(groundtruth_path, sep=" ", header=None, comment="#")
+    # groundtruth = df.to_numpy()
+    #
+    # fig = plt.figure()
+    # ax1 = fig.add_subplot(111, projection='3d')
+    # ax1.plot(groundtruth[:, 4], groundtruth[:, 8], groundtruth[:, 12], label="ground_truth", color='g')
+    # ax1.plot(prediction[:, 4], prediction[:, 8], prediction[:, 12], label="estimated", color='orange')
+    # ax1.legend(loc="upper left", fontsize=15)
+    # ax1.set_xlabel('x (m)', fontsize=13)
+    # ax1.set_ylabel('z (m)', fontsize=13)
+    # ax1.set_zlabel('y (m)', fontsize=13)
+    # plt.tight_layout()
+    #
+    # if save:
+    #     assert figure_path is not None
+    #     plt.savefig(figure_path)
+    #
+    # plt.show()
+    # Read the data
+    df_pred = pd.read_csv(estimated_path, sep=" ", header=None, comment="#")
+    prediction = df_pred.to_numpy()
 
-    df = pd.read_csv(groundtruth_path, sep=" ", header=None, comment="#")
-    groundtruth = df.to_numpy()
+    df_gt = pd.read_csv(groundtruth_path, sep=" ", header=None, comment="#")
+    groundtruth = df_gt.to_numpy()
 
-    fig = plt.figure()
-    ax1 = fig.add_subplot(111, projection='3d')
-    ax1.plot(groundtruth[:, 4], groundtruth[:, 8], groundtruth[:, 12], label="ground_truth", color='g')
-    ax1.plot(prediction[:, 4], prediction[:, 8], prediction[:, 12], label="estimated", color='orange')
-    ax1.legend(loc="upper left", fontsize=15)
-    ax1.set_xlabel('x (m)', fontsize=13)
-    ax1.set_ylabel('z (m)', fontsize=13)
-    ax1.set_zlabel('y (m)', fontsize=13)
-    plt.tight_layout()
+    # Create 3D line traces
+    trace_gt = go.Scatter3d(
+        x=groundtruth[:, 4],
+        y=groundtruth[:, 8],
+        z=groundtruth[:, 12],
+        mode='lines',
+        name='ground_truth',
+        line=dict(color='green', width=4)
+    )
 
+    trace_pred = go.Scatter3d(
+        x=prediction[:, 4],
+        y=prediction[:, 8],
+        z=prediction[:, 12],
+        mode='lines',
+        name='estimated',
+        line=dict(color='orange', width=4)
+    )
+
+    # Create the figure
+    fig = go.Figure(data=[trace_gt, trace_pred])
+
+    # Update layout
+    fig.update_layout(
+        scene=dict(
+            xaxis_title='x (m)',
+            yaxis_title='z (m)',
+            zaxis_title='y (m)'
+        ),
+        legend=dict(
+            x=0.02,
+            y=0.98,
+            font=dict(size=13)
+        ),
+        margin=dict(l=0, r=0, b=0, t=40),
+        title='Estimated vs Ground Truth Trajectories',
+        width=800,
+        height=700
+    )
+
+    # Show or save
     if save:
-        assert figure_path is not None
-        plt.savefig(figure_path)
-
-    plt.show()
+        assert figure_path is not None, "figure_path must be provided if save=True"
+        fig.write_html(figure_path)  # Saves as interactive HTML
+    else:
+        fig.show()
 
 
 def plot_s3_timestamp_estimated_groundtruth_2d(
