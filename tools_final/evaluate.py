@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from tools import make_matrix_homogenous, evaluate
+from tools.evaluation import evaluate, make_matrix_homogenous
 from tools_final.tools_final_mine import transform_trajectories_mine_final
 
 
