@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+import plotly.graph_objects as go
 
 import matplotlib.animation as animation
 from mpl_toolkits.mplot3d import Axes3D
@@ -57,19 +58,60 @@ def plot_quat_timestamp_2d(path, save=False, output_path=None):
 
     plt.show()
 
+def plot_se3_timestamp_2d(path, save=False, output_path=None):
+    df = pd.read_csv(path, sep=" ", header=None, comment="#")
+    matrix = df.to_numpy()
+    plt.rcParams.update({'font.size': 12})
+    fig = plt.figure(figsize=(7, 6))
+    plt.plot(matrix[:, 4], matrix[:, 12])
+    plt.xlabel('x (m)', fontsize=14)
+    plt.ylabel('y (m)', fontsize=14)
+    plt.show()
+
 
 def plot_s3_timestamp(path="/home/washindeiru/studia/7_semestr/vo/visual_odometry/LightGlue/results/davis_3_calib+2024-12-30_10:56:48/results_s3_with_timestamp.txt"):
+
+    # df = pd.read_csv(path, sep=" ", header=None, comment="#")
+    # matrix = df.to_numpy()
+    #
+    # fig = plt.figure(figsize=(7, 6))
+    # ax = fig.add_subplot(111, projection='3d')
+    # ax.plot(matrix[:, 4], matrix[:, 8], matrix[:, 12])
+    # ax.set_xlabel('x (m)')
+    # ax.set_ylabel('y (m)')
+    # ax.set_zlabel('z (m)')
+    # plt.show()
 
     df = pd.read_csv(path, sep=" ", header=None, comment="#")
     matrix = df.to_numpy()
 
-    fig = plt.figure(figsize=(7, 6))
-    ax = fig.add_subplot(111, projection='3d')
-    ax.plot(matrix[:, 4], matrix[:, 8], matrix[:, 12])
-    ax.set_xlabel('x (m)')
-    ax.set_ylabel('y (m)')
-    ax.set_zlabel('z (m)')
-    plt.show()
+    # Extract x, y, z coordinates
+    x = matrix[:, 4]
+    y = matrix[:, 8]
+    z = matrix[:, 12]
+
+    # Create 3D line plot
+    fig = go.Figure(data=[go.Scatter3d(
+        x=x,
+        y=y,
+        z=z,
+        mode='lines',
+        line=dict(color='blue', width=3)
+    )])
+
+    # Set axis labels and layout
+    fig.update_layout(
+        scene=dict(
+            xaxis_title='x (m)',
+            yaxis_title='y (m)',
+            zaxis_title='z (m)'
+        ),
+        width=700,
+        height=600,
+        title='3D Trajectory'
+    )
+
+    fig.show()
 
 
 def plot_quat_timestamp(path="/home/washindeiru/studia/7_semestr/vo/visual_odometry/LightGlue/results/davis_3_calib+2024-12-30_10:56:48/results_s3_with_timestamp.txt"):
