@@ -114,7 +114,7 @@ def evaluate_trajectories(
    label_size=17
    ticks_size=14
 
-   matplotlib.use('TkAgg')
+   # matplotlib.use('TkAgg')
    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
    ax1.tick_params(axis='both', which='major', labelsize=ticks_size)
    ax1.plot(np.arange(0, translation_error.shape[0], 1), translation_error)
